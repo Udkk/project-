@@ -1,124 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
-
-const ContractAddress = '0xd9145CCE52D386f254917e481eB44e9943F39138';
-const ContractABI =[
-	{
-		"inputs": [],
-		"name": "readdata",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_x",
-				"type": "uint256"
-			}
-		],
-		"name": "setdata",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-];
+import {useState, useEffect} from "react";
+import {ethers} from "ethers";
+import atm_abi from "../artifacts/contracts/Contract.sol/Assessment.json";
 
 export default function HomePage() {
   const [ethWallet, setEthWallet] = useState(undefined);
   const [account, setAccount] = useState(undefined);
-  const [atmContract, setATMContract] = useState(undefined);
-  const [x, setX] = useState(undefined);
-  const [inputValue, setInputValue] = useState('');
+  const [atm, setATM] = useState(undefined);
+  const [balance, setBalance] = useState(undefined);
 
-  useEffect(() => {
+  const contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+  const atmABI = atm_abi.abi;
+
+  const getWallet = async() => {
     if (window.ethereum) {
       setEthWallet(window.ethereum);
     }
-  }, []);
 
-  const connectAccount = async () => {
+    if (ethWallet) {
+      const account = await ethWallet.request({method: "eth_accounts"});
+      handleAccount(account);
+    }
+  }
+
+  const handleAccount = (account) => {
+    if (account) {
+      console.log ("Account connected: ", account);
+      setAccount(account);
+    }
+    else {
+      console.log("No account found");
+    }
+  }
+
+  const connectAccount = async() => {
     if (!ethWallet) {
       alert('MetaMask wallet is required to connect');
       return;
     }
+  
     const accounts = await ethWallet.request({ method: 'eth_requestAccounts' });
-    setAccount(accounts[0]);
-
-    // once wallet is set we can get a reference to our deployed contract
+    handleAccount(accounts);
+    
+   
     getATMContract();
   };
 
   const getATMContract = () => {
     const provider = new ethers.providers.Web3Provider(ethWallet);
     const signer = provider.getSigner();
-    const atmContract = new ethers.Contract(ContractAddress, ContractABI, signer);
-    setATMContract(atmContract);
+    const atmContract = new ethers.Contract(contractAddress, atmABI, signer);
+ 
+    setATM(atmContract);
   }
 
-  const setdata = async () => {
-    if (atmContract) {
-      try {
-        const uint256Value = ethers.utils.parseUnits(inputValue, 0); // convert to uint256
-        const tx = await atmContract.setdata(uint256Value);
-        await tx.wait();
-        readdata();
-      } catch (error) {
-        console.error(error);
-      }
+  const getBalance = async() => {
+    if (atm) {
+      setBalance((await atm.getBalance()).toNumber());
     }
-  };
+  }
 
-  const readdata = async () => {
-    if (atmContract) {
-      try {
-        const xValue = await atmContract.readdata();
-        setX(xValue.toNumber());
-      } catch (error) {
-        console.error("Error reading data:", error);
-      }
+  const deposit = async() => {
+    if (atm) {
+      let tx = await atm.deposit(1);
+      await tx.wait()
+      getBalance();
     }
-  };
-  
+  }
 
-  
+  const withdraw = async() => {
+    if (atm) {
+      let tx = await atm.withdraw(1);
+      await tx.wait()
+      getBalance();
+    }
+  }
 
+  const initUser = () => {
   
+    if (!ethWallet) {
+      return <p>Please install Metamask in order to use this ATM.</p>
+    }
 
-  useEffect(() => {
-    readdata();
-  }, [atmContract]);
+ 
+    if (!account) {
+      return <button onClick={connectAccount}>Please connect your Metamask wallet</button>
+    }
+
+    if (balance == undefined) {
+      getBalance();
+    }
+
+    return (
+      <div>
+        <p>Your Account: {account}</p>
+        <p>Your Balance: {balance}</p>
+        <button onClick={deposit}>Deposit 1 ETH</button>
+        <button onClick={withdraw}>Withdraw 1 ETH</button>
+      </div>
+    )
+  }
+
+  useEffect(() => {getWallet();}, []);
 
   return (
-    <div>
-      <h1>Simple ATM Interface</h1>
-      {ethWallet? (
-        account? (
-          <div>
-            <p>Account: {account}</p>
-            <p>X Value: {x}</p>
-            <input
-              type="number"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
-            <button onClick={setdata}>Set X</button>
-            <button onClick={readdata}>read X</button>
-            
-          </div>
-        ) : (
-          <button onClick={connectAccount}>Please connect your MetaMask wallet</button>
-        )
-      ) : (
-        <p>Please install MetaMask to use this ATM.</p>
-      )}
-    </div>
-  );
+    <main className="container">
+      <header><h1>this is the project</h1></header>
+      {initUser()}
+      <style jsx>{`
+        .container {
+          text-align: center
+        }
+      `}
+      </style>
+    </main>
+  )
 }
