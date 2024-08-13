@@ -1,13 +1,14 @@
 const hre = require("hardhat");
 
 async function main() {
-  const Contract = await hre.ethers.getContractFactory("Contract");
-  const contract = await Contract.deploy();
-
+  const initBalance = 1;
+  const Contract = await hre.ethers.getContractFactory("Assessment");
+  const contract = await Contract.deploy(initBalance);
   await contract.deployed();
 
-  console.log(`Contract deployed to ${contract.address}`);
+  console.log(`A contract is deployed to ${contract.address}`);
 }
+
 
 main().catch((error) => {
   console.error(error);
