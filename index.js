@@ -1,14 +1,14 @@
 import {useState, useEffect} from "react";
 import {ethers} from "ethers";
-import atm_abi from "../artifacts/contracts/Contract.sol/Assessment.json";
+import atm_abi from "../artifacts/contracts/Assessment.sol/Assessment.json";
 
 export default function HomePage() {
   const [ethWallet, setEthWallet] = useState(undefined);
   const [account, setAccount] = useState(undefined);
   const [atm, setATM] = useState(undefined);
-  const [balance, setBalance] = useState(undefined);
+  const [cost, setcost] = useState(undefined);
 
-  const contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+  const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
   const atmABI = atm_abi.abi;
 
   const getWallet = async() => {
@@ -41,7 +41,7 @@ export default function HomePage() {
     const accounts = await ethWallet.request({ method: 'eth_requestAccounts' });
     handleAccount(accounts);
     
-   
+    // once wallet is set we can get a reference to our deployed contract
     getATMContract();
   };
 
@@ -53,49 +53,66 @@ export default function HomePage() {
     setATM(atmContract);
   }
 
-  const getBalance = async() => {
+  const getcost = async() => {
     if (atm) {
-      setBalance((await atm.getBalance()).toNumber());
+      setcost((await atm.getcost()).toNumber());
     }
   }
 
-  const deposit = async() => {
-    if (atm) {
-      let tx = await atm.deposit(1);
-      await tx.wait()
-      getBalance();
-    }
-  }
 
-  const withdraw = async() => {
+  const comp = async(event) => {
+    event.preventDefault()
     if (atm) {
-      let tx = await atm.withdraw(1);
+      const se=document.querySelector("#Brand");
+      const id = se.options[se.selectedIndex].id;
+      console.log(id);
+      let tx = await atm.company(id);
       await tx.wait()
-      getBalance();
+      const set=document.querySelector("#size");
+      const id1 = set.options[set.selectedIndex].id;
+      let txn = await atm.size(id1);
+      console.log(id1);
+      await txn.wait()
+      getcost();
     }
   }
 
   const initUser = () => {
-  
+    // Check to see if user has Metamask
     if (!ethWallet) {
       return <p>Please install Metamask in order to use this ATM.</p>
     }
 
- 
+    // Check to see if user is connected. If not, connect to their account
     if (!account) {
       return <button onClick={connectAccount}>Please connect your Metamask wallet</button>
     }
 
-    if (balance == undefined) {
-      getBalance();
+    if (cost == undefined) {
+      getcost();
     }
-
     return (
       <div>
         <p>Your Account: {account}</p>
-        <p>Your Balance: {balance}</p>
-        <button onClick={deposit}>Deposit 1 ETH</button>
-        <button onClick={withdraw}>Withdraw 1 ETH</button>
+        
+        <p>Your Cost: {cost}</p>
+        <form onSubmit={comp}>
+          <select id="Brand">
+          <option id="1">sony</option>
+          <option id="2">samsung</option>
+          <option id="3">LG</option>
+          <option id="4">Bravia</option>
+          </select>
+          <br></br>
+          <select id="size">
+          <option id="43">43 inchs</option>
+          <option id="50">50 inchs</option>
+          <option id="65">65 inchs</option>
+          <option id="108">108 inchs</option>
+          </select>
+          <br></br>
+          <button>Submit</button>
+        </form>
       </div>
     )
   }
@@ -104,7 +121,7 @@ export default function HomePage() {
 
   return (
     <main className="container">
-      <header><h1>this is the project</h1></header>
+      <header><h1>select your T.V.</h1></header>
       {initUser()}
       <style jsx>{`
         .container {
