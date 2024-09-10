@@ -1,40 +1,38 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.9;
 
-
+//import "hardhat/console.sol";
 
 contract Assessment {
-    address payable public owner;
-    uint256 public balance;
-
-    event Deposit(uint256 amount);
-    event Withdraw(uint256 amount);
-
-    constructor(uint initBalance) payable {
-        owner = payable(msg.sender);
-        balance = initBalance;
+   uint cost=0;
+   function company(uint comp) public  {
+    cost=0;
+      if(comp==1){
+        cost+=1000;
+      }
+      else if(comp==2){
+        cost+=2000;
+      }
+      else if(comp==3){
+        cost+=3000;
+      } 
+      else{
+        cost+=4000;
+      }
+   }
+   function size(uint st) public {
+    if(st==3){
+      cost+=200;
     }
-
-    function getBalance() public view returns(uint256){
-        return balance;
+    else if(st==4){
+      cost+=300;
     }
-
-    function deposit(uint256 _amount) public payable {
-        uint _previousBalance = balance;
-        assert(msg.sender == owner);
-        balance += _amount;
-        assert(balance == _previousBalance + _amount);
-        emit Deposit(_amount);
+    else{
+      cost+=500;
     }
-
-    function withdraw(uint256 _withdrawAmount) public {
-        require(msg.sender == owner, "You are not the owner of this account");
-        uint _previousBalance = balance;
-        if (balance < _withdrawAmount) {
-           
-        }
-        balance -= _withdrawAmount;
-        assert(balance == (_previousBalance - _withdrawAmount));
-        emit Withdraw(_withdrawAmount);
-    }
+    
+   }
+   function getcost() public view returns(uint){
+    return cost;
+   }
 }
